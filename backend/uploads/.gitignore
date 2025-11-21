@@ -1,0 +1,3 @@
+# Ignorer les images uploadées
+uploads/products/*
+!uploads/products/.gitkeep

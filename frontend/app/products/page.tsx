@@ -1,0 +1,325 @@
+'use client'
+
+import { useState, useEffect, useMemo } from 'react'
+import ProductCard from '@/components/ProductCard'
+import { translateCategory } from '@/lib/translations'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+
+interface Product {
+  _id: string
+  id: number
+  name: string
+  category: string
+  price: number
+  pricePublic?: number
+  image?: string
+  images?: string[]
+  stock: number
+  createdAt?: string
+}
+
+type SortOption = 'price-asc' | 'price-desc' | 'newest' | 'discounted' | 'in-stock'
+
+export default function ProductsPage() {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [sortBy, setSortBy] = useState<SortOption | null>(null)
+  const [showSortMenu, setShowSortMenu] = useState(false)
+
+  const categories = [
+    { slug: 'all' },
+    { slug: 'phones' },
+    { slug: 'cases' },
+    { slug: 'accessories' },
+    { slug: 'watches' },
+    { slug: 'earphones' }
+  ]
+
+  useEffect(() => {
+    fetchProducts()
+  }, [])
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch(`${API_URL}/products`)
+      const data = await response.json()
+
+      if (data.success) {
+        setProducts(data.data.products)
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des produits:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Filtrage et tri
+  const filteredAndSortedProducts = useMemo(() => {
+    let filtered = products.filter(product => {
+      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory
+      return matchesSearch && matchesCategory
+    })
+
+    // Application du tri
+    if (sortBy === 'price-asc') {
+      filtered = [...filtered].sort((a, b) => a.price - b.price)
+    } else if (sortBy === 'price-desc') {
+      filtered = [...filtered].sort((a, b) => b.price - a.price)
+    } else if (sortBy === 'newest') {
+      filtered = [...filtered].sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+        return dateB - dateA
+      })
+    } else if (sortBy === 'discounted') {
+      filtered = filtered.filter(p => p.pricePublic && p.pricePublic > p.price)
+    } else if (sortBy === 'in-stock') {
+      filtered = filtered.filter(p => p.stock > 0)
+    }
+
+    return filtered
+  }, [products, searchQuery, selectedCategory, sortBy])
+
+  const getSortLabel = (option: SortOption): string => {
+    switch (option) {
+      case 'price-asc':
+        return 'Prix croissant'
+      case 'price-desc':
+        return 'Prix décroissant'
+      case 'newest':
+        return 'Nouveautés'
+      case 'discounted':
+        return 'Remises'
+      case 'in-stock':
+        return 'En stock uniquement'
+      default:
+        return ''
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container-custom py-12">
+        <div className="text-center py-20">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement des produits...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="container-custom page-transition">
+      {/* Header */}
+      <div className="text-center mb-12 animate-slide-down">
+        <h1 className="heading-lg mb-4">Nos Produits</h1>
+        <p className="text-gray-600">
+          Découvrez notre collection complète
+        </p>
+      </div>
+
+      {/* Search Bar & Filter Button */}
+      <div className="max-w-4xl mx-auto mb-8 animate-slide-up">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-center">
+          {/* Search Input */}
+          <div className="relative flex-1 sm:max-w-xl">
+            <input
+              type="text"
+              placeholder="Rechercher un produit..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-12 pl-12 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-400 transition-all"
+            />
+            <svg
+              className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+
+          {/* Filter Button with Dropdown */}
+          <div className="relative flex-shrink-0">
+            <button
+              onClick={() => setShowSortMenu(!showSortMenu)}
+              className="w-full sm:w-auto h-12 px-6 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all flex items-center justify-center gap-2 bg-white shadow-sm hover:shadow"
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              <span className="text-sm font-medium text-gray-700 whitespace-nowrap">Filtrer</span>
+            </button>
+
+            {/* Dropdown Menu */}
+            {showSortMenu && (
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-20">
+                <button
+                  onClick={() => {
+                    setSortBy('price-asc')
+                    setShowSortMenu(false)
+                  }}
+                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors ${
+                    sortBy === 'price-asc' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+                  }`}
+                >
+                  Prix croissant
+                </button>
+                <button
+                  onClick={() => {
+                    setSortBy('price-desc')
+                    setShowSortMenu(false)
+                  }}
+                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors ${
+                    sortBy === 'price-desc' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+                  }`}
+                >
+                  Prix décroissant
+                </button>
+                <button
+                  onClick={() => {
+                    setSortBy('newest')
+                    setShowSortMenu(false)
+                  }}
+                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors ${
+                    sortBy === 'newest' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+                  }`}
+                >
+                  Nouveautés
+                </button>
+                <button
+                  onClick={() => {
+                    setSortBy('discounted')
+                    setShowSortMenu(false)
+                  }}
+                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors ${
+                    sortBy === 'discounted' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+                  }`}
+                >
+                  Remises
+                </button>
+                <button
+                  onClick={() => {
+                    setSortBy('in-stock')
+                    setShowSortMenu(false)
+                  }}
+                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors ${
+                    sortBy === 'in-stock' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+                  }`}
+                >
+                  En stock uniquement
+                </button>
+
+                {sortBy && (
+                  <>
+                    <div className="border-t border-gray-100 my-2"></div>
+                    <button
+                      onClick={() => {
+                        setSortBy(null)
+                        setShowSortMenu(false)
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      Réinitialiser le filtre
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Active Filter Display */}
+      {sortBy && (
+        <div className="max-w-4xl mx-auto mb-6 flex items-center justify-center gap-2">
+          <span className="text-sm text-gray-600">Filtre actif :</span>
+          <span className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+            {getSortLabel(sortBy)}
+            <button
+              onClick={() => setSortBy(null)}
+              className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </span>
+        </div>
+      )}
+
+      {/* Category Pills */}
+      <div className="flex flex-wrap justify-center gap-3 mb-8 animate-slide-up">
+        {categories.map(category => (
+          <button
+            key={category.slug}
+            onClick={() => setSelectedCategory(category.slug)}
+            className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
+              selectedCategory === category.slug
+                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg scale-105'
+                : 'bg-white border border-gray-300 text-gray-700 hover:border-blue-500 hover:text-blue-600'
+            }`}
+          >
+            {translateCategory(category.slug)}
+          </button>
+        ))}
+      </div>
+
+      {/* Products Count */}
+      <div className="mb-6 text-center">
+        <p className="text-gray-600 font-medium">
+          {filteredAndSortedProducts.length} produit{filteredAndSortedProducts.length > 1 ? 's' : ''} trouvé{filteredAndSortedProducts.length > 1 ? 's' : ''}
+        </p>
+      </div>
+
+      {/* Products Grid - 5 colonnes sur desktop */}
+      {filteredAndSortedProducts.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
+          {filteredAndSortedProducts.map((product, index) => (
+            <div
+              key={product._id}
+              className="animate-scale-in"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <ProductCard product={product} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">🔍</div>
+          <h3 className="text-2xl font-bold mb-2 text-gray-900">Aucun produit trouvé</h3>
+          <p className="text-gray-600 mb-6">
+            Essayez de modifier vos critères de recherche
+          </p>
+          <button
+            onClick={() => {
+              setSearchQuery('')
+              setSelectedCategory('all')
+              setSortBy(null)
+            }}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Réinitialiser
+          </button>
+        </div>
+      )}
+      </div>
+    </div>
+  )
+}

@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongo:
+    image: mongo:latest
+    container_name: sphone_db
+    restart: always
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: sphone
+    networks:
+      - sphone-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sphone_backend
+    restart: always
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+    environment:
+      PORT: 5000
+      MONGODB_URI: mongodb://mongo:27017/sphone
+      JWT_SECRET: ${JWT_SECRET:-changeme_your_super_secret_jwt_key_here}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_changeme}
+      FRONTEND_URL: http://localhost:3001
+      NODE_ENV: production
+    depends_on:
+      - mongo
+    command: ["npm", "start"]
+    networks:
+      - sphone-network
+
+  # Frontend Next.js
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sphone_frontend
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:5001/api
+      NEXT_PUBLIC_STRIPE_PUBLIC_KEY: ${NEXT_PUBLIC_STRIPE_PUBLIC_KEY:-pk_test_changeme}
+    depends_on:
+      - backend
+    networks:
+      - sphone-network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  sphone-network:
+    driver: bridge

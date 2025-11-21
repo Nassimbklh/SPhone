@@ -1,0 +1,24 @@
+<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cableGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#94a3b8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#64748b;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Cable -->
+  <path d="M 80 200 Q 150 150 200 200 T 320 200" stroke="url(#cableGradient)" stroke-width="12" fill="none" stroke-linecap="round"/>
+
+  <!-- USB-C connector -->
+  <rect x="60" y="185" width="30" height="30" rx="5" fill="#475569" stroke="#1e293b" stroke-width="2"/>
+  <rect x="68" y="193" width="14" height="14" rx="2" fill="#94a3b8"/>
+
+  <!-- Lightning connector -->
+  <rect x="310" y="185" width="30" height="30" rx="5" fill="#475569" stroke="#1e293b" stroke-width="2"/>
+  <rect x="318" y="193" width="14" height="14" rx="2" fill="#fbbf24"/>
+  
+  <!-- Charger icon -->
+  <rect x="170" y="280" width="60" height="80" rx="8" fill="#f3f4f6" stroke="#64748b" stroke-width="3"/>
+  <rect x="185" y="295" width="30" height="25" rx="3" fill="#94a3b8"/>
+  <path d="M 200 315 L 195 325 L 202 325 L 197 335" stroke="#fbbf24" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
