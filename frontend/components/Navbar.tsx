@@ -1,14 +1,22 @@
 'use client'
 
 import Link from 'next/link'
-import { useAuth } from '@/lib/hooks/useAuth'
+import { useAuthStore } from '@/store/authStore'
 import { useState } from 'react'
 import { useCartStore } from '@/store/cartStore'
+import { useRouter } from 'next/navigation'
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout } = useAuth()
+  const router = useRouter()
+  const { user, isAuthenticated, logout: logoutStore } = useAuthStore()
   const [showDropdown, setShowDropdown] = useState(false)
   const totalItems = useCartStore((state) => state.getTotalItems())
+
+  const handleLogout = () => {
+    logoutStore()
+    setShowDropdown(false)
+    router.push('/')
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
@@ -98,10 +106,7 @@ export default function Navbar() {
 
                     <div className="border-t border-gray-100 mt-2 pt-2">
                       <button
-                        onClick={() => {
-                          setShowDropdown(false)
-                          logout()
-                        }}
+                        onClick={handleLogout}
                         className="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
                       >
                         <svg className="w-5 h-5 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

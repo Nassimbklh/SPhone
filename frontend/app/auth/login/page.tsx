@@ -3,11 +3,11 @@
 import { useState, FormEvent, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/hooks/useAuth'
+import { useAuthStore } from '@/store/authStore'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { login, isLoading, isAuthenticated } = useAuth()
+  const { isAuthenticated, login: loginStore } = useAuthStore()
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -18,10 +18,10 @@ export default function LoginPage() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    if (isAuthenticated) {
       router.push('/profile')
     }
-  }, [isLoading, isAuthenticated, router])
+  }, [isAuthenticated, router])
 
   // Check if user was redirected from checkout
   useEffect(() => {
@@ -43,10 +43,40 @@ export default function LoginPage() {
 
     setIsSubmitting(true)
 
-    const result = await login(formData.email, formData.password)
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
 
-    if (!result.success) {
-      setError(result.message || 'Erreur lors de la connexion')
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        // Stocker dans le store Zustand (qui persiste automatiquement dans localStorage)
+        loginStore(data.data.token, data.data.user)
+
+        // Vérifier s'il y a une redirection à faire
+        const redirectUrl = localStorage.getItem('redirectAfterLogin')
+        if (redirectUrl) {
+          localStorage.removeItem('redirectAfterLogin')
+          router.push(redirectUrl)
+        } else {
+          // Redirection selon le rôle
+          if (data.data.user.role === 'admin') {
+            router.push('/admin')
+          } else {
+            router.push('/profile')
+          }
+        }
+      } else {
+        setError(data.message || 'Erreur lors de la connexion')
+        setIsSubmitting(false)
+      }
+    } catch (err) {
+      setError('Erreur de connexion au serveur')
       setIsSubmitting(false)
     }
   }
@@ -57,17 +87,6 @@ export default function LoginPage() {
       [e.target.name]: e.target.value
     })
     setError('')
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement...</p>
-        </div>
-      </div>
-    )
   }
 
   return (
