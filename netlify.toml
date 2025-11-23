@@ -1,0 +1,10 @@
+# Configuration Netlify pour CryptoPhone (S.phone)
+# Deployment frontend Next.js
+
+[build]
+  base = "frontend"
+  command = "npm install && npm run build"
+  publish = "frontend/.next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
