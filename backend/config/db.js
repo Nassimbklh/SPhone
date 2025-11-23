@@ -2,19 +2,25 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    console.log('= Connexion � MongoDB en cours...');
+    console.log('= Connexion à MongoDB en cours...');
 
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/sphone', {
+    // Debug: vérifier si MONGODB_URI est définie
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/sphone';
+    const uriMasked = mongoUri.replace(/(:\/\/)([^:]+):([^@]+)@/, '$1$2:****@');
+    console.log(`DEBUG - URI utilisée: ${uriMasked}`);
+    console.log(`DEBUG - MONGODB_URI définie: ${!!process.env.MONGODB_URI}`);
+
+    const conn = await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
 
-    console.log(' MongoDB connect� avec succ�s !');
-    console.log(`=� Base de donn�es: ${conn.connection.name}`);
-    console.log(`= H�te: ${conn.connection.host}`);
-    console.log(`=� Port: ${conn.connection.port}\n`);
+    console.log('✅ MongoDB connecté avec succès !');
+    console.log(`📊 Base de données: ${conn.connection.name}`);
+    console.log(`🌐 Hôte: ${conn.connection.host}`);
+    console.log(`🔌 Port: ${conn.connection.port}\n`);
   } catch (error) {
-    console.error('L Erreur de connexion � MongoDB:');
+    console.error('❌ Erreur de connexion à MongoDB:');
     console.error(`   Message: ${error.message}`);
     console.error(`   Code: ${error.code || 'N/A'}\n`);
 
