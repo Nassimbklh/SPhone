@@ -6,12 +6,13 @@ yarn-error.log*
 package-lock.json
 yarn.lock
 
-# Environment variables - CRITIQUE POUR LA SÉCURITÉ
+# Environment variables - CRITIQUE POUR LA Sï¿½CURITï¿½
 .env
 .env.local
 .env.*.local
 .env.development
 .env.production
+.env.exemple
 *.env
 
 # Build outputs
@@ -44,7 +45,7 @@ tmp/
 temp/
 *.tmp
 
-# Uploads (fichiers utilisateurs - peuvent contenir des données sensibles)
+# Uploads (fichiers utilisateurs - peuvent contenir des donnï¿½es sensibles)
 backend/uploads/*
 !backend/uploads/.gitkeep
 !backend/uploads/.gitignore
@@ -53,7 +54,7 @@ backend/uploads/*
 *.sqlite
 *.db
 
-# Secrets et clés
+# Secrets et clï¿½s
 *.pem
 *.key
 *.cert

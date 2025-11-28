@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { translateCategory, getCategoryEmoji } from '@/lib/translations'
+import { useAuthStore } from '@/store/authStore'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
 // Fonction pour calculer le prix le plus bas d'un produit
 const getLowestPrice = (product: any): number => {
@@ -61,6 +64,7 @@ const getTotalStock = (product: any): number => {
 }
 
 export default function AdminProductsPage() {
+  const { token, user } = useAuthStore()
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -71,7 +75,7 @@ export default function AdminProductsPage() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/products')
+      const response = await fetch(`${API_URL}/products`)
       const data = await response.json()
       setProducts(data.data?.products || [])
     } catch (error) {
@@ -85,21 +89,37 @@ export default function AdminProductsPage() {
     if (!confirm('Voulez-vous vraiment supprimer ce produit ?')) return
 
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5001/api/products/${id}`, {
+      if (!token) {
+        alert('Vous devez être connecté pour supprimer un produit')
+        return
+      }
+
+      if (user?.role !== 'admin') {
+        alert('Vous devez être administrateur pour supprimer un produit')
+        return
+      }
+
+      const response = await fetch(`${API_URL}/products/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       })
 
+      const data = await response.json()
+
       if (response.ok) {
-        alert('Produit supprime avec succes')
+        alert('Produit supprimé avec succès')
         fetchProducts()
       } else {
-        alert('Erreur lors de la suppression')
+        // Afficher le message d'erreur exact du backend
+        alert(`Erreur: ${data.message || 'Erreur lors de la suppression'}`)
+        console.error('Détails de l\'erreur:', data)
       }
     } catch (error) {
       console.error('Erreur:', error)
-      alert('Erreur lors de la suppression')
+      alert('Erreur de connexion au serveur')
     }
   }
 

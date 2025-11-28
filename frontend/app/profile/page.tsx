@@ -1,11 +1,14 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useAuth } from '@/lib/hooks/useAuth'
+import { useAuthStore } from '@/store/authStore'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export default function ProfilePage() {
-  const { user, isLoading, isAuthenticated, logout } = useAuth()
+  const router = useRouter()
+  const { user, isAuthenticated, logout } = useAuthStore()
+  const isLoading = false // Plus besoin de isLoading avec Zustand
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -171,7 +174,10 @@ export default function ProfilePage() {
                     Mon Panier
                   </Link>
                   <button
-                    onClick={logout}
+                    onClick={() => {
+                      logout()
+                      router.push('/auth/login')
+                    }}
                     className="w-full px-4 py-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 font-medium transition-colors"
                   >
                     Se deconnecter

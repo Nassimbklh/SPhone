@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+
 export default function OrderDetailPage() {
   const router = useRouter()
   const params = useParams()
@@ -19,7 +21,7 @@ export default function OrderDetailPage() {
   const fetchOrder = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5001/api/orders/${orderId}`, {
+      const response = await fetch(`${API_URL}/orders/${orderId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       const data = await response.json()
@@ -39,7 +41,7 @@ export default function OrderDetailPage() {
     setUpdating(true)
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5001/api/orders/${orderId}/pay`, {
+      const response = await fetch(`${API_URL}/orders/${orderId}/pay`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -71,7 +73,7 @@ export default function OrderDetailPage() {
     setUpdating(true)
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5001/api/orders/${orderId}/deliver`, {
+      const response = await fetch(`${API_URL}/orders/${orderId}/deliver`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -78,4 +78,113 @@ Si vous voulez réinitialiser complètement la base de données, décommentez ce
 
 ---
 
+## 👑 Script de Création d'Admin
+
+Le script `createAdmin.js` permet de gérer les administrateurs de l'application.
+
+### Prérequis
+
+Assurez-vous que votre base de données MongoDB est en cours d'exécution et que vos variables d'environnement sont configurées correctement dans le fichier `.env`.
+
+### Utilisation
+
+#### 1. Créer un nouvel administrateur
+
+```bash
+cd backend
+node scripts/createAdmin.js create
+```
+
+Cette commande vous demandera interactivement les informations suivantes :
+- Prénom
+- Nom
+- Email
+- Téléphone
+- Mot de passe (minimum 6 caractères)
+
+#### 2. Promouvoir un utilisateur existant en admin
+
+```bash
+node scripts/createAdmin.js promote email@example.com
+```
+
+Cette commande promeut un utilisateur existant (identifié par son email) en administrateur.
+
+#### 3. Lister tous les administrateurs
+
+```bash
+node scripts/createAdmin.js list
+```
+
+Cette commande affiche la liste de tous les administrateurs avec leurs informations.
+
+### Exemple d'utilisation
+
+```bash
+# Créer un nouvel admin
+$ node scripts/createAdmin.js create
+
+📝 Création d'un nouvel administrateur
+
+Prénom: Jean
+Nom: Dupont
+Email: admin@cryptophone.com
+Téléphone: +33612345678
+Mot de passe (min 6 caractères): ******
+
+✅ Admin créé avec succès!
+📧 Email: admin@cryptophone.com
+👤 Nom: Jean Dupont
+🔑 Rôle: admin
+```
+
+```bash
+# Promouvoir un utilisateur existant
+$ node scripts/createAdmin.js promote user@example.com
+
+✅ Utilisateur promu en admin avec succès!
+📧 Email: user@example.com
+👤 Nom: Marie Martin
+🔑 Rôle: admin
+```
+
+```bash
+# Lister les admins
+$ node scripts/createAdmin.js list
+
+📋 Liste des administrateurs (2):
+
+1. Jean Dupont
+   📧 admin@cryptophone.com
+   📅 Créé le: 28/11/2025
+
+2. Marie Martin
+   📧 user@example.com
+   📅 Créé le: 27/11/2025
+```
+
+### Notes importantes
+
+- Par défaut, tous les utilisateurs créés via l'inscription normale ont le rôle 'user'
+- Seuls les administrateurs peuvent accéder au panneau d'administration
+- Seuls les administrateurs peuvent supprimer, créer ou modifier des produits
+- Le mot de passe sera automatiquement hashé avant d'être stocké dans la base de données
+
+### Dépannage
+
+#### Erreur de connexion à MongoDB
+
+Si vous obtenez une erreur de connexion, vérifiez que :
+1. MongoDB est en cours d'exécution
+2. La variable `MONGODB_URI` dans votre fichier `.env` est correcte
+
+#### L'utilisateur existe déjà
+
+Si vous essayez de créer un admin avec un email déjà utilisé, utilisez la commande `promote` à la place :
+```bash
+node scripts/createAdmin.js promote email@example.com
+```
+
+---
+
 **Développé pour S.phone** 🔐📱

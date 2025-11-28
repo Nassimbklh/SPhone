@@ -223,7 +223,7 @@ exports.forgotPassword = async (req, res) => {
     // Sauvegarder le code et l'expiration dans la base de données
     user.resetPasswordCode = resetCode;
     user.resetPasswordExpires = resetCodeExpires;
-    await user.save();
+    await user.save({ validateModifiedOnly: true });
 
     // Envoyer l'email
     await sendResetPasswordEmail(user.email, resetCode, user.firstname);
@@ -282,7 +282,7 @@ exports.resetPassword = async (req, res) => {
     user.password = newPassword;
     user.resetPasswordCode = undefined;
     user.resetPasswordExpires = undefined;
-    await user.save();
+    await user.save({ validateModifiedOnly: true });
 
     res.status(200).json({
       success: true,

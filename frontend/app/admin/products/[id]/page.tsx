@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { useAuthStore } from '@/store/authStore'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
@@ -13,7 +14,7 @@ import { requiresStorage } from '@/lib/products-data'
 import type { ProductVariants } from '@/lib/conditions'
 
 // API URL with fallback for development
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
 interface FormErrors {
   [key: string]: string
@@ -28,6 +29,7 @@ export default function EditProductPage() {
   const router = useRouter()
   const params = useParams()
   const productId = params.id as string
+  const { token, user } = useAuthStore()
 
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -59,7 +61,7 @@ export default function EditProductPage() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const apiUrl = `${API_BASE_URL}/api/products/${productId}`
+        const apiUrl = `${API_URL}/products/${productId}`
         console.log('Fetching product from:', apiUrl)
 
         const response = await fetch(apiUrl)
@@ -294,12 +296,12 @@ export default function EditProductPage() {
       }
 
       // Construct API URL with validation
-      const apiUrl = `${API_BASE_URL}/api/products/${productId}`
+      const apiUrl = `${API_URL}/products/${productId}`
 
       // Debug logging
       console.log('=== UPDATING PRODUCT ===')
       console.log('Product ID:', productId)
-      console.log('API_BASE_URL:', API_BASE_URL)
+      console.log('API_URL:', API_URL)
       console.log('Full API URL:', apiUrl)
       console.log('Product Data:', JSON.stringify(productData, null, 2))
 
@@ -308,9 +310,12 @@ export default function EditProductPage() {
         throw new Error(`Invalid API URL: ${apiUrl}. Please check your environment configuration.`)
       }
 
-      const token = localStorage.getItem('token')
       if (!token) {
         throw new Error('Vous devez être connecté pour modifier un produit')
+      }
+
+      if (user?.role !== 'admin') {
+        throw new Error('Vous devez être administrateur pour modifier un produit')
       }
 
       const response = await fetch(apiUrl, {

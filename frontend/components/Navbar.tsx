@@ -48,8 +48,8 @@ export default function Navbar() {
                   onClick={() => setShowDropdown(!showDropdown)}
                   className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
                 >
-                  <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
-                    {user.firstname?.[0]}{user.lastname?.[0]}
+                  <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-base">
+                    {user.firstname?.[0]?.toUpperCase()}{user.lastname?.[0]?.toUpperCase()}
                   </div>
                   <svg className={`w-4 h-4 transition-transform ${showDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

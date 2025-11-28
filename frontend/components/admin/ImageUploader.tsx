@@ -2,6 +2,7 @@
 
 import { useState, useRef, DragEvent } from 'react'
 import { Card } from '@/components/ui/Card'
+import { useAuthStore } from '@/store/authStore'
 
 interface ImageUploaderProps {
   images: string[]
@@ -18,7 +19,9 @@ export function ImageUploader({
   maxImages = 10,
   errors = {}
 }: ImageUploaderProps) {
+  const { token } = useAuthStore()
   const [isDragging, setIsDragging] = useState(false)
+  const [urlInput, setUrlInput] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
@@ -57,12 +60,12 @@ export function ImageUploader({
   const handleFiles = async (files: File[]) => {
     // Filtrer tous les formats d'images courants
     const imageFiles = files.filter(file => {
-      const validTypes = ['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+      const validTypes = ['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/avif'];
       return validTypes.includes(file.type);
     });
 
     if (imageFiles.length === 0) {
-      alert('Veuillez sélectionner uniquement des fichiers image (PNG, JPG, JPEG, WEBP, SVG)')
+      alert('Veuillez sélectionner uniquement des fichiers image (PNG, JPG, JPEG, WEBP, SVG, AVIF)')
       return
     }
 
@@ -73,7 +76,6 @@ export function ImageUploader({
 
     // Upload vers le serveur
     try {
-      const token = localStorage.getItem('token');
       const formData = new FormData();
 
       // Ajouter tous les fichiers au FormData
@@ -123,6 +125,29 @@ export function ImageUploader({
     fileInputRef.current?.click()
   }
 
+  const handleAddUrl = () => {
+    if (!urlInput.trim()) {
+      alert('Veuillez entrer une URL')
+      return
+    }
+
+    if (images.length >= maxImages) {
+      alert(`Vous ne pouvez ajouter que ${maxImages} images maximum`)
+      return
+    }
+
+    // Vérifier si c'est une URL valide ou un chemin
+    let imageUrl = urlInput.trim()
+
+    // Si c'est juste un nom de fichier, construire l'URL complète
+    if (!imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+      imageUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/uploads/${imageUrl}`
+    }
+
+    onChange([...images, imageUrl])
+    setUrlInput('')
+  }
+
   return (
     <div className="space-y-4">
       {/* Drag & Drop Zone */}
@@ -151,7 +176,7 @@ export function ImageUploader({
             ref={fileInputRef}
             type="file"
             multiple
-            accept=".svg,.png,.jpg,.jpeg,.webp,image/svg+xml,image/png,image/jpeg,image/jpg,image/webp"
+            accept=".svg,.png,.jpg,.jpeg,.webp,.avif,image/svg+xml,image/png,image/jpeg,image/jpg,image/webp,image/avif"
             onChange={handleFileSelect}
             className="hidden"
           />
@@ -174,7 +199,7 @@ export function ImageUploader({
               </p>
             </div>
             <p className="text-xs text-gray-400">
-              PNG, JPG, JPEG, WEBP, SVG - Maximum 10 MB par fichier
+              PNG, JPG, JPEG, WEBP, SVG, AVIF - Maximum 10 MB par fichier
             </p>
           </div>
         </div>
@@ -182,6 +207,33 @@ export function ImageUploader({
         {errors.images && (
           <p className="mt-2 text-sm text-red-600">{errors.images}</p>
         )}
+      </Card>
+
+      {/* Add URL manually */}
+      <Card
+        title="Ou ajouter une URL/nom de fichier"
+        description="Entrez une URL complète ou juste le nom du fichier (ex: image.jpg)"
+      >
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleAddUrl()}
+            placeholder="https://example.com/image.jpg ou image.jpg"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <button
+            type="button"
+            onClick={handleAddUrl}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors whitespace-nowrap"
+          >
+            Ajouter
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-gray-500">
+          💡 Si vous entrez juste un nom de fichier (ex: "image.jpg"), il sera automatiquement converti en URL complète
+        </p>
       </Card>
 
       {/* Image Gallery */}

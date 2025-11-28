@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
     totalProducts: 0,
@@ -17,13 +19,13 @@ export default function AdminDashboard() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token')
-        
+
         // Fetch products
-        const productsRes = await fetch('http://localhost:5001/api/products')
+        const productsRes = await fetch(`${API_URL}/products`)
         const productsData = await productsRes.json()
-        
+
         // Fetch orders
-        const ordersRes = await fetch('http://localhost:5001/api/orders', {
+        const ordersRes = await fetch(`${API_URL}/orders`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         const ordersData = await ordersRes.json()

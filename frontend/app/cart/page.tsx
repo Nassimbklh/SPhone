@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import { useCartStore } from '@/store/cartStore'
+import { useAuthStore } from '@/store/authStore'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getCategoryEmoji, translateLabel } from '@/lib/translations'
@@ -11,64 +11,23 @@ import { getConditionLabel, getEtatLabel, getStorageLabel } from '@/lib/conditio
 export default function CartPage() {
   const router = useRouter()
   const { items, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCartStore()
+  const { isAuthenticated } = useAuthStore()
   const totalPrice = getTotalPrice()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
-  const handleCheckout = async () => {
-    setLoading(true)
-    setError(null)
+  const handleCheckout = () => {
+    console.log('handleCheckout - isAuthenticated:', isAuthenticated)
 
-    try {
-      const token = localStorage.getItem('token')
-
-      if (!token) {
-        // Sauvegarder l'URL de retour pour rediriger après connexion
-        localStorage.setItem('redirectAfterLogin', '/cart')
-        router.push('/auth/login')
-        return
-      }
-
-      // Prepare cart items for the API
-      const cartItems = items.map(item => ({
-        productId: item._id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        storage: item.storage,
-        etat: item.etat,
-        condition: item.condition, // Ancien système (rétrocompatibilité)
-        color: item.selectedColor
-      }))
-
-      // Create Stripe checkout session
-      const response = await fetch('http://localhost:5001/api/payment/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ items: cartItems })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Erreur lors de la création de la session de paiement')
-      }
-
-      // Redirect to Stripe Checkout
-      if (data.data.url) {
-        window.location.href = data.data.url
-      } else {
-        throw new Error('URL de paiement non reçue')
-      }
-    } catch (err) {
-      console.error('Erreur checkout:', err)
-      setError(err instanceof Error ? err.message : 'Erreur lors du paiement')
-    } finally {
-      setLoading(false)
+    if (!isAuthenticated) {
+      console.log('Not authenticated, redirecting to login')
+      // Sauvegarder l'URL de retour pour rediriger après connexion
+      localStorage.setItem('redirectAfterLogin', '/checkout')
+      router.push('/auth/login')
+      return
     }
+
+    console.log('Authenticated, redirecting to checkout')
+    // Rediriger vers la page de checkout personnalisée
+    router.push('/checkout')
   }
 
   if (items.length === 0) {
@@ -224,30 +183,14 @@ export default function CartPage() {
               </div>
             )}
 
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            )}
-
             <button
               onClick={handleCheckout}
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium transition-colors mb-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium transition-colors mb-3 flex items-center justify-center gap-2"
             >
-              {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Préparation du paiement...</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                  </svg>
-                  <span>Passer la commande</span>
-                </>
-              )}
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+              <span>Passer la commande</span>
             </button>
 
             <Link

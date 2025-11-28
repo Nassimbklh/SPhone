@@ -46,16 +46,17 @@ const fileFilter = (req, file, cb) => {
     'image/jpeg',
     'image/jpg',
     'image/webp',
-    'image/svg+xml'
+    'image/svg+xml',
+    'image/avif'
   ];
-  const allowedExtensions = ['.png', '.jpg', '.jpeg', '.webp', '.svg'];
+  const allowedExtensions = ['.png', '.jpg', '.jpeg', '.webp', '.svg', '.avif'];
 
   const ext = path.extname(file.originalname).toLowerCase();
 
   if (allowedTypes.includes(file.mimetype) && allowedExtensions.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new Error('Seuls les fichiers PNG, JPG, JPEG, WEBP et SVG sont acceptés'), false);
+    cb(new Error('Seuls les fichiers PNG, JPG, JPEG, WEBP, SVG et AVIF sont acceptés'), false);
   }
 };
 
@@ -162,7 +163,7 @@ router.delete('/:filename', auth, isAdmin, (req, res) => {
 
     // Vérifier que c'est bien un fichier image
     const ext = path.extname(filename).toLowerCase();
-    if (!['.svg', '.png', '.jpg', '.jpeg', '.webp'].includes(ext)) {
+    if (!['.svg', '.png', '.jpg', '.jpeg', '.webp', '.avif'].includes(ext)) {
       return res.status(400).json({
         success: false,
         message: 'Seuls les fichiers image peuvent être supprimés'
@@ -199,7 +200,7 @@ router.get('/list', auth, isAdmin, (req, res) => {
     const images = files
       .filter(file => {
         const ext = path.extname(file).toLowerCase();
-        return ['.svg', '.png', '.jpg', '.jpeg', '.webp'].includes(ext);
+        return ['.svg', '.png', '.jpg', '.jpeg', '.webp', '.avif'].includes(ext);
       })
       .map(file => {
         const filePath = path.join(uploadDir, file);
@@ -248,7 +249,7 @@ router.use((error, req, res, next) => {
     }
   }
 
-  if (error.message === 'Seuls les fichiers PNG, JPG, JPEG, WEBP et SVG sont acceptés') {
+  if (error.message === 'Seuls les fichiers PNG, JPG, JPEG, WEBP, SVG et AVIF sont acceptés') {
     return res.status(400).json({
       success: false,
       message: error.message

@@ -44,13 +44,16 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:5001/api
+        NEXT_PUBLIC_STRIPE_PUBLIC_KEY: ${NEXT_PUBLIC_STRIPE_PUBLIC_KEY:-pk_test_51KfQnUEh6ondl1qjmmetPcNX8OEkGkQouXeIAzk8Wa14wg2WCs59kAzBrBOewum9tQF0VA13HjNGqeAosZFiY5Sl00UKoD2brV}
     container_name: sphone_frontend
     restart: always
     ports:
       - "3001:3000"
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:5001/api
-      NEXT_PUBLIC_STRIPE_PUBLIC_KEY: ${NEXT_PUBLIC_STRIPE_PUBLIC_KEY:-pk_test_changeme}
+      NEXT_PUBLIC_STRIPE_PUBLIC_KEY: ${NEXT_PUBLIC_STRIPE_PUBLIC_KEY:-pk_test_51KfQnUEh6ondl1qjmmetPcNX8OEkGkQouXeIAzk8Wa14wg2WCs59kAzBrBOewum9tQF0VA13HjNGqeAosZFiY5Sl00UKoD2brV}
     depends_on:
       - backend
     networks:

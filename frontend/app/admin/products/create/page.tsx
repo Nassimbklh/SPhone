@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuthStore } from '@/store/authStore'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
@@ -13,7 +14,7 @@ import { requiresStorage } from '@/lib/products-data'
 import type { ProductVariants } from '@/lib/conditions'
 
 // API URL with fallback for development
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
 interface FormErrors {
   [key: string]: string
@@ -26,6 +27,7 @@ interface Specification {
 
 export default function CreateProductPage() {
   const router = useRouter()
+  const { token, user } = useAuthStore()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
 
@@ -237,11 +239,11 @@ export default function CreateProductPage() {
       }
 
       // Construct API URL with validation
-      const apiUrl = `${API_BASE_URL}/api/products`
+      const apiUrl = `${API_URL}/products`
 
       // Debug logging
       console.log('=== CREATING PRODUCT ===')
-      console.log('API_BASE_URL:', API_BASE_URL)
+      console.log('API_URL:', API_URL)
       console.log('Full API URL:', apiUrl)
       console.log('Product Data:', JSON.stringify(productData, null, 2))
 
@@ -250,9 +252,12 @@ export default function CreateProductPage() {
         throw new Error(`Invalid API URL: ${apiUrl}. Please check your environment configuration.`)
       }
 
-      const token = localStorage.getItem('token')
       if (!token) {
         throw new Error('Vous devez être connecté pour créer un produit')
+      }
+
+      if (user?.role !== 'admin') {
+        throw new Error('Vous devez être administrateur pour créer un produit')
       }
 
       const response = await fetch(apiUrl, {
